@@ -34,13 +34,13 @@ const AICoach = ({ currentStreak }) => {
     };
 
     return (
-        <div className="flex flex-col h-72 bg-white/10 rounded-xl backdrop-blur-sm overflow-hidden border border-white/20">
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 scrollbar-hide">
+        <div className="flex flex-col h-full bg-white rounded-xl overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
                 {messages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed ${msg.role === 'user'
-                                ? 'bg-white text-brand-600 font-medium'
-                                : 'bg-black/20 text-white backdrop-blur-md'
+                        <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.role === 'user'
+                                ? 'bg-brand-600 text-white rounded-tr-none'
+                                : 'bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200'
                             }`}>
                             {msg.content}
                         </div>
@@ -48,11 +48,11 @@ const AICoach = ({ currentStreak }) => {
                 ))}
                 {loading && (
                     <div className="flex justify-start">
-                        <div className="bg-black/20 px-3 py-2 rounded-2xl">
+                        <div className="bg-slate-100 px-4 py-3 rounded-2xl rounded-tl-none border border-slate-200">
                             <div className="flex space-x-1">
-                                <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce" />
-                                <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce delay-75" />
-                                <div className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce delay-150" />
+                                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
+                                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75" />
+                                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-150" />
                             </div>
                         </div>
                     </div>
@@ -60,16 +60,16 @@ const AICoach = ({ currentStreak }) => {
                 <div ref={messagesEndRef} />
             </div>
 
-            <form onSubmit={handleSend} className="p-3 flex gap-2 border-t border-white/10 bg-black/10">
+            <form onSubmit={handleSend} className="p-3 bg-white border-t border-slate-100 flex gap-2">
                 <input
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Pregúntame algo..."
-                    className="flex-1 bg-transparent text-white placeholder-white/60 px-4 py-2 rounded-full border border-white/20 focus:outline-none focus:border-white/50 focus:bg-white/5 text-sm transition-all"
+                    placeholder="Escribe tu mensaje..."
+                    className="flex-1 bg-slate-50 text-slate-800 placeholder-slate-400 px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100 text-sm transition-all"
                 />
-                <button type="submit" className="p-2 bg-white text-brand-600 rounded-full hover:bg-slate-100 transition-transform active:scale-95 disabled:opacity-50" disabled={loading}>
-                    <Send className="w-4 h-4" />
+                <button type="submit" className="p-3 bg-brand-600 text-white rounded-xl hover:bg-brand-700 transition-all active:scale-95 disabled:opacity-50 shadow-md shadow-brand-200" disabled={loading}>
+                    <Send className="w-5 h-5" />
                 </button>
             </form>
         </div>
