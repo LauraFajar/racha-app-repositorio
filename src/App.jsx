@@ -4,14 +4,13 @@ import { Flame, Dumbbell, MessageSquare, Trophy, LogOut } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
 // Componentes
-import StreakCounter from './components/StreakCounter';
+import HabitList from './components/HabitList';
 import AICoach from './components/AICoach';
 import Auth from './components/Auth';
 import Achievements from './components/Achievements';
 
 function App() {
   const [session, setSession] = useState(null);
-  const [streak, setStreak] = useState(0);
 
 
   useEffect(() => {
@@ -27,65 +26,6 @@ function App() {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  // Cargar la racha del usuario desde la base de datos
-  useEffect(() => {
-    if (session?.user) {
-      loadUserStreak();
-    }
-  }, [session]);
-
-  const loadUserStreak = async () => {
-    let { data, error } = await supabase
-      .from('profiles')
-      .select('current_streak, last_activity_date, longest_streak')
-      .eq('id', session.user.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error cargando racha:', error);
-      return;
-    }
-
-    // Si no existe el perfil aún, esperar un momento (el trigger lo está creando)
-    if (!data) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const { data: retryData } = await supabase
-        .from('profiles')
-        .select('current_streak, last_activity_date, longest_streak')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (!retryData) {
-        console.warn('Perfil aún no disponible');
-        setStreak(0);
-        return;
-      }
-      data = retryData;
-    }
-
-    // Verificar si la racha sigue activa
-    const today = new Date().toISOString().split('T')[0];
-    const lastActivity = data.last_activity_date;
-
-    if (lastActivity) {
-      const daysDiff = Math.floor(
-        (new Date(today) - new Date(lastActivity)) / (1000 * 60 * 60 * 24)
-      );
-
-      if (daysDiff > 1) {
-        setStreak(0);
-        await supabase
-          .from('profiles')
-          .update({ current_streak: 0 })
-          .eq('id', session.user.id);
-      } else {
-        setStreak(data.current_streak || 0);
-      }
-    } else {
-      setStreak(data.current_streak || 0);
-    }
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -105,12 +45,11 @@ function App() {
         <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full blur-3xl -z-10 -translate-y-1/2 translate-x-1/2" />
         <div>
           <h2 className="text-2xl font-bold text-slate-800">¡Hola, {session.user.email?.split('@')[0]}!</h2>
-          <p className="text-slate-500">Mantén tu racha viva completando tu actividad de hoy.</p>
-        </div>
-        <div className="py-6">
-          <StreakCounter streak={streak} setStreak={setStreak} />
+          <p className="text-slate-500">Mantén tus hábitos activos día a día.</p>
         </div>
       </section>
+
+      <HabitList />
 
       <div
         onClick={() => navigate('/chat')}
@@ -121,7 +60,7 @@ function App() {
         </div>
         <div className="flex-1">
           <p className="text-sm font-bold text-brand-800">Habla con tu Coach</p>
-          <p className="text-xs text-brand-600">Necesitas motivación hoy?</p>
+          <p className="text-xs text-brand-600">¿Necesitas motivación hoy?</p>
         </div>
       </div>
     </>
@@ -137,7 +76,7 @@ function App() {
       </div>
       <div className="flex-1 bg-white border-x border-b border-slate-200 rounded-b-3xl shadow-sm overflow-hidden relative">
         <div className="absolute inset-0">
-          <AICoach currentStreak={streak} />
+          <AICoach currentStreak={0} />
         </div>
       </div>
     </div>
@@ -153,10 +92,6 @@ function App() {
             <h1 className="font-bold text-xl tracking-tight text-slate-800">Racha</h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-orange-100 px-3 py-1 rounded-full text-brand-600 font-bold text-sm">
-              <Flame className="w-4 h-4 fill-current" />
-              <span>{streak}</span>
-            </div>
             <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
               <LogOut className="w-5 h-5" />
             </button>
