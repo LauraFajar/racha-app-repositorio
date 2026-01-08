@@ -28,6 +28,65 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Cargar la racha del usuario desde la base de datos
+  useEffect(() => {
+    if (session?.user) {
+      loadUserStreak();
+    }
+  }, [session]);
+
+  const loadUserStreak = async () => {
+    let { data, error } = await supabase
+      .from('profiles')
+      .select('current_streak, last_activity_date, longest_streak')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error cargando racha:', error);
+      return;
+    }
+
+    // Si no existe el perfil aún, esperar un momento (el trigger lo está creando)
+    if (!data) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const { data: retryData } = await supabase
+        .from('profiles')
+        .select('current_streak, last_activity_date, longest_streak')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (!retryData) {
+        console.warn('Perfil aún no disponible');
+        setStreak(0);
+        return;
+      }
+      data = retryData;
+    }
+
+    // Verificar si la racha sigue activa
+    const today = new Date().toISOString().split('T')[0];
+    const lastActivity = data.last_activity_date;
+
+    if (lastActivity) {
+      const daysDiff = Math.floor(
+        (new Date(today) - new Date(lastActivity)) / (1000 * 60 * 60 * 24)
+      );
+
+      if (daysDiff > 1) {
+        setStreak(0);
+        await supabase
+          .from('profiles')
+          .update({ current_streak: 0 })
+          .eq('id', session.user.id);
+      } else {
+        setStreak(data.current_streak || 0);
+      }
+    } else {
+      setStreak(data.current_streak || 0);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
